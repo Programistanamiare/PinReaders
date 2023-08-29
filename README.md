@@ -1,6 +1,6 @@
 # PinReaders for Arduino Framework v1.0.0
 
-### The library is used for easier reading and management of measurements from analog inputs and digital microcontrollers, whose programming can be based on the Arduino framework.
+The library is used for easier reading and management of measurements from analog inputs and digital microcontrollers, whose programming can be based on the Arduino framework.
 
 
 ## Example
@@ -122,7 +122,7 @@ A member function that return the value of the last read from the analog pin, wi
 <br>
 
 A component function that returns information on whether and how the new reading value has changed in relation to the previous reading from the analog pin. Reacting to contact vibrations can be prevented by using a buffer.<br>
-@param **buffer** the amount by which the previous reading must change from the new reading for a change in value to be detected.<br>
+@param **buffer** the amount by which the previous reading must change from the new reading for a change in value to be detected (0 by default).<br>
 @returns: <br>
 * **1** if value incrased,<br>
 * **-1** if value decrased,<br>
@@ -143,7 +143,7 @@ Overloading a member function by adding a value parameter against which to compa
 * **0** if value is not change.
 
 ```cpp
-  int AnalogReader<T>::valueIsChange(const T& buffor = 0, const T& compare_against);
+  int AnalogReader<T>::valueIsChange(const T& buffor, const T& compare_against);
 ```
 
 </details>
