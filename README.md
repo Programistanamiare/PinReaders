@@ -145,9 +145,12 @@ Overloading a member function by adding a value parameter against which to compa
 ```cpp
   int AnalogReader<T>::valueIsChange(const T& buffor, const T& compare_against);
 ```
+---
+<br>
 
 </details>
 
+<br>
 
 ### DigitalReader
 
