@@ -1,55 +1,90 @@
 #pragma once
 
-#include <Arduino.h>
+#include "Arduino.h"
 
+
+template<class T = uint16_t>
 class AnalogReader
 {
 public:
-  /**
-   * Typ wskaźnikowy przyjmujący funkcję, która przyjmuje jeden argument typu "int" oraz zwraca typ "uint32_t".
-  */
-  typedef uint32_t (*TransitionFunctionPtr)(int);
-  /**
-   * Konstruktor klasy AnalogReader. Klasa służy do odczytu wartości z podanego wejścia analogowego.
-   * Poprzez wbudowaną funkcję read() w zależności od podanych argumentów można tę wartość mapować liniowo 
-   * bądź poprzez własną funkcję przejścia.
-   * @param analog_pin pin analogowy, z którego będą odczytywane wartości.
-  */
-  AnalogReader(const uint8_t& analog_pin = A0);
 
-  /**
-   * Funkcja składowa odczytująca bezpośrednią wartość z wejścia analogowego i zapisująca pomiar do wew. zmiennej
-   * w celu późniejszego jej odczytu.
-   * @return odczytaną wartość z wejścia analogowego.
-  */
-  const int32_t& read();
+  typedef T (*TransitionFunctionPtr)(int);
 
-  /**
-   * Funkcja składowa odczytująca wartość z wejścia analogowego, mapująca ją przez podany zakres i zapisująca wynik do 
-   * wew. zmiennej w celu późniejszego jej odczytu.
-   * @param from dolna granica mapowania.
-   * @param to górna granica mapowania.
-   * @return wynik mapowania odczytanej wartości.
-  */
-  const int32_t& read(const int32_t& from, const int32_t& to);
+  AnalogReader(const uint8_t& analog_pin = A0) 
+  : pin{analog_pin}, value{0}, converted_value{0}, prev_value{0} {}
 
-  /**
-   * Funkcja składowa odczytująca wartość z wejścia analogowego, przepuszczająca wynik pomiaru przez podaną jako argument
-   * funkcję i zapisująca wynik podanej funkcji do wew. zmiennej w celu późniejszego jej odczytu.
-   * @param function wskaźnik do funkcji przejścia, która pobiera typ "int" i zwraca typ "uint32_t".
-   * @return wynik podanej funkcji.
-  */
-  const int32_t& read(TransitionFunctionPtr function);
+  const T& read();
 
-  /**
-   * Funkcja składowa umożliwiająca pobranie ostatniego odczytu wejścia analogowego po ewentualnych modyfikacjach.
-   * @return wartość ostatnio wywołanej funkcji składowej read.
-  */
-  const int32_t& getValue() const;
+  const T& read(const T& from, const T& to);
 
-  
+  const T& read(TransitionFunctionPtr function);
+
+  const T& getConvertedValue() const 
+  { 
+    return this->converted_value; 
+  }
+
+  const int& getOriginalValue() const 
+  { 
+    return this->value; 
+  }
+
+  int valueIsChange(const T& buffor = 0);
+  int valueIsChange(const T& buffor, const T& compare_against);
+
 private:
-  void initVars();
   uint8_t pin;
-  int32_t value;
+  int value;
+  T converted_value;
+  T prev_value;
+  void simpleRead();
+  T temp_map(const T& out_min, const T& out_max);
 };
+
+template<class T>
+void AnalogReader<T>::simpleRead()
+{
+  this->prev_value = this->converted_value;
+  this->value = analogRead(this->pin);
+}
+
+template<class T>
+T AnalogReader<T>::temp_map(const T& out_min, const T& out_max)
+{
+  return this->value * (out_max - out_min) / 1023 + out_min;
+}
+
+template<class T>
+const T& AnalogReader<T>::read()
+{
+  this->simpleRead();
+  return this->converted_value = this->value;
+}
+
+template<class T>
+const T& AnalogReader<T>::read(const T& from, const T& to)
+{
+  this->simpleRead();
+  return this->converted_value = this->temp_map(from, to);
+}
+
+template<class T>
+const T& AnalogReader<T>::read(TransitionFunctionPtr function)
+{
+  this->simpleRead();
+  return this->converted_value = function(this->value);
+}
+
+template<class T>
+int AnalogReader<T>::valueIsChange(const T& buffor)
+{
+  return this->valueIsChange(buffor, this->prev_value);
+}
+
+template<class T>
+int AnalogReader<T>::valueIsChange(const T& buffor, const T& compare_against)
+{
+  if (this->converted_value > compare_against && this->converted_value - compare_against > buffor) return 1;
+  if (compare_against > this->converted_value && compare_against - this->converted_value > buffor) return -1;
+  return 0;
+}

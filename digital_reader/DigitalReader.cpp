@@ -1,18 +1,6 @@
 #include "DigitalReader.hpp"
 
 
-DigitalReader::DigitalReader(const uint8_t& pin)
-{
-  this->initVars();
-  this->pin = pin;
-}
-
-void DigitalReader::initVars()
-{
-  this->pin = this->counter = 0;
-  this->current_state = this->prev_state = false;
-}
-
 void DigitalReader::init(const uint8_t& mode)
 {
   this->mode = mode;
@@ -47,6 +35,11 @@ bool DigitalReader::onDeactivate(bool incrase_counter)
     return true;
   }
   return false;
+}
+
+bool DigitalReader::onToggle(bool incrase_counter)
+{
+  return this->onActivate(incrase_counter) || this->onDeactivate(incrase_counter);
 }
 
 const uint32_t& DigitalReader::getCounter() const
